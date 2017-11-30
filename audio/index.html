@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="cn-zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=800, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Haiyue - Night</title>
+
+  <style>
+    body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background-color: #0A0326;
+      /* background-color: #ffffff; */
+      padding: 0;
+      margin: 0;
+    }
+
+    div#float {
+      position: absolute;
+      color: white;
+    }
+
+    svg {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+
+  <script src="../js/d3.min.js"></script>
+  <script src="../js/TweenLite.js"></script>
+</head>
+
+<body>
+  <div id="float">
+    <audio src="./11.mp4" controls="controls" id="audio">你的浏览器不支持audio标签</audio>
+    <input type="file" id="file" onchange="onInputFileChange()">
+  </div>
+  <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+</body>
+
+<script>
+  function onInputFileChange() {
+    var file = document.getElementById('file').files[0];
+    var url = URL.createObjectURL(file);
+    console.log(url);
+    document.getElementById("audio").src = url;
+  }  
+</script>
+
+<script>
+
+  const svg = d3.select("#svg");
+
+  window.addEventListener("resize", function (e) {
+    w = svg.style.width = window.innerWidth;
+    h = svg.style.height = window.innerHeight;
+
+    resetWindow()
+  });
+
+  const colors = [
+    "#C501E1",
+    "#9A26F8",
+    "#6564FE",
+    "#2B97FA",
+    "#02C4E7",
+    "#16E6CC",
+    "#2EF9A0",
+    "#C6E501",
+    "#E7C501",
+    "#FF6A63",
+    "#F82D98",
+    "#E830CE",
+  ]
+  function random_color() {
+    return colors[Math.floor(Math.random() * colors.length)]
+  }
+
+  function random_opacity() {
+    return 0.2 + Math.random()
+  }
+
+  function random_cx() {
+    return Math.random() * window.innerWidth;
+  }
+
+  function random_cy() {
+    return Math.random() * window.innerHeight;
+  }
+
+  function random_radius() {
+    return 1 + Math.random() * 4
+  }
+
+  const count_of_stars = 50
+  const resetStarts = () => {
+    svg.selectAll('circle.star').remove()
+
+    svg.selectAll('circle.star').data(d3.range(0, count_of_stars)).enter().append('circle')
+      .attr('class', 'star')
+      .attr('id', function (d) { return 'idx-' + d; })
+      .attr('fill', random_color)
+      .attr('cx', random_cx)
+      .attr('cy', random_cy)
+      .attr('r', random_radius)
+  }
+
+  const twinkling = () => {
+    const time = 0.4
+    const delay = 0.2
+
+    let idx = Math.floor(Math.random() * count_of_stars);
+
+    let star = svg.select('circle.star#idx-' + idx)
+    if (star.attr('twinkling')) {
+      return
+    }
+    star.attr('twinkling', true);
+    let radius = star.r = parseFloat(star.attr('r'))
+
+    TweenLite.to(star, time, {
+      r: star.r + 10,
+      onUpdate: () => {
+        star.attr('r', star.r);
+      },
+      onComplete: () => {
+        TweenLite.to(star, time, {
+          r: radius,
+          delay: delay,
+          onUpdate: () => {
+            star.attr('r', star.r)
+          },
+          onComplete: () => {
+            star.attr('twinkling', null);
+          }
+        })
+      }
+    })
+  }
+
+  const resetMoon = () => {
+    svg.select('path.moon').remove()
+
+    let x = 0.3 * window.innerWidth
+    let y = 0.2 * window.innerHeight
+    let r = 50 * 2
+
+    svg.append('path')
+      .attr('class', 'moon')
+      .attr('fill', 'white')
+      .attr('d', `M${x},${y} a1,1 0 0,0 ${r},${r}`)
+      .attr('x', x)
+      .attr('y', y)
+      .attr('r', r)
+  }
+
+  const shaking = () => {
+    let moon = svg.select('path.moon')
+    if (moon.attr('shaking')) {
+      return
+    }
+    moon.attr('shaking', true);
+
+    let value = {
+      x: parseFloat(moon.attr('x')),
+      y: parseFloat(moon.attr('y')),
+      r: parseFloat(moon.attr('r')),
+    }
+    let time = .2;
+    TweenLite.to(value, time / 20, {
+      y: value.y + 10,
+      onUpdate: () => {
+        moon.attr('d', `M${value.x},${value.y} a1,1 0 0,0 ${value.r},${value.r}`)
+      },
+      onComplete: () =>
+        TweenLite.to(value, time, {
+          y: value.y - 10,
+          onUpdate: () => {
+            moon.attr('d', `M${value.x},${value.y} a1,1 0 0,0 ${value.r},${value.r}`)
+          },
+          onComplete: () => {
+            moon.attr('shaking', null);
+          }
+        })
+    });
+  }
+
+  const count_of_trees = 10
+  let g_bottom, g_top, space, width, start
+  const resetTrees = () => {
+    svg.selectAll('polygon.tree').remove()
+
+    g_bottom = window.innerHeight - 20;
+    g_top = g_bottom - 240;
+    space = window.innerWidth / count_of_trees
+    width = Math.max(space - 20, 40);
+    start = (space - width) / 2;
+    svg.selectAll('polygon.tree').data(d3.range(0, count_of_trees)).enter().append('polygon')
+      .attr('class', 'tree')
+      .attr('id', function (d) { return 'idx-' + d; })
+      .attr('fill', random_color)
+      .attr('points', function (d) { return points_4_tree(d, g_top); })
+  }
+
+  const points_4_tree = (idx, top) => {
+    let left = start + idx * space
+    let center = left + width / 2
+    let right = left + width
+    let trunk = 8
+
+    return `${center},${top} ${center - width / 2},${top + 100} ${center - width / 4},${top + 100} ${center - width / 2},${top + 140} ${center - width / 4},${top + 140} ${center - width / 2},${top + 180} ${center - trunk},${top + 180} ${center - trunk},${g_bottom} ${center + trunk},${g_bottom} ${center + trunk},${top + 180} ${center + width / 2},${top + 180} ${center + width / 4},${top + 140} ${center + width / 2},${top + 180} ${center + width / 4},${top + 140} ${center + width / 2},${top + 140} ${center + width / 4},${top + 100} ${center + width / 2},${top + 100}`
+  }
+
+  const growing = (idx) => {
+    const time = 0.4
+    const delay = 0.2
+
+    // idx = Math.floor(Math.random() * count_of_stars);
+
+    let tree = svg.select('polygon.tree#idx-' + idx)
+    if (tree.attr('growing')) {
+      return
+    }
+    tree.attr('growing', true);
+
+    tree.top = g_top;
+
+    TweenLite.to(tree, time / 2, {
+      top: tree.top - 100,
+      onUpdate: () => {
+        tree.attr('points', points_4_tree(idx, tree.top))
+      },
+      onComplete: () => {
+        TweenLite.to(tree, time, {
+          top: g_top,
+          delay: delay,
+          onUpdate: () => {
+            tree.attr('points', points_4_tree(idx, tree.top))
+          },
+          onComplete: () => {
+            tree.attr('growing', null);
+          }
+        })
+      }
+    })
+  }
+
+  const resetWindow = () => {
+    resetStarts()
+    resetMoon()
+    resetTrees()
+  }
+  resetWindow()
+
+  setInterval(function () {
+    twinkling()
+    // growing(2)
+  }, 3000)
+
+</script>
+<script type="text/javascript">
+
+  window.addEventListener('load', function (e) {
+    // 从audio标签获取声音源 source
+    let audio = document.getElementById("audio");
+    console.log(audio)
+    let source = audio_context.createMediaElementSource(audio);
+    console.log(source)
+    source.connect(analyser);
+    console.log(analyser);
+    analyser.connect(audio_context.destination);
+
+    animation();
+
+  }, false);
+
+  //直接从audio处理音频源，声明一些必要的变量
+  let audio_context, analyser;
+
+  try {
+    audio_context = new (window.AudioContext || window.webkitAudioContext);
+  } catch (e) {
+    throw new Error('The Web Audio API is unavailable');
+  }
+
+  //建立分析器
+  analyser = audio_context.createAnalyser();
+  console.log(analyser)
+
+  let data_length = analyser.frequencyBinCount;
+  let datas = new Uint8Array(data_length);
+
+  // 全局计数
+  let d_count = {
+    value: 0,
+  };
+
+  function animation() {
+    analyser.getByteFrequencyData(datas);
+
+    requestAnimationFrame(animation);
+
+    if (!check_tick()) {
+      return
+    }
+    ++d_count.value;
+
+    twinkling();
+    shaking()
+    growing(d_count.value % count_of_trees)
+  }
+
+  let sm_count = 10;
+  let flux_count = 0;
+  let threshold_value = 0;
+  let last_tick = false;
+  let last_datas = new Uint8Array(data_length);
+  function check_tick() {
+    // 采样数据的差值之和
+    let flux = 0;
+    for (let idx = 0; idx < data_length; ++idx) {
+      let value = (datas[idx] - last_datas[idx]);
+      flux += (value < 0 ? 0 : value);
+      last_datas[idx] = datas[idx];
+    }
+    // 采样数据有效计数，开始-结束
+    if (0 != flux) {
+      flux_count = Math.min(sm_count + 1, 1 + flux_count);
+    }
+    else {
+      flux_count = Math.max(0, flux_count - 1);
+    }
+
+    // 是否是节拍点儿
+    let tick = (flux_count > sm_count) && (flux < threshold_value);
+
+    threshold_value = (threshold_value * (sm_count - 1) + flux) / sm_count;
+    if (threshold_value < 0.001) {
+      threshold_value = 0;
+    }
+
+    let c_tick = tick != last_tick && tick;
+    last_tick = tick
+
+    return c_tick;
+  }
+
+</script>
+
+</html>
