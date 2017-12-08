@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="../js/d3.min.js"></script>
+
+  <style>
+    #container {
+      width: 1070px;
+      height: 1015px;
+      overflow: hidden;
+      background-color: #A0E0DA;
+    }
+  </style>
+
+  <script type="text/javascript">
+    let g_index = 0;
+    let g_animating = false;
+    function onClickContainer(event) {
+      if (g_animating) {
+        return
+      }
+      ++g_index;
+
+      if (g_index > animations.length) {
+        // console.log('index: ' + g_index);
+        alert('未完待续.....');
+      }
+      else {
+        animations[g_index - 1]()
+      }
+    }
+
+    function father_speaking(times) {
+      g_animating = true
+      let m_data1 = d3.select('#container #father #moth #status-1').attr('d')
+      let m_data2 = d3.select('#container #father #moth #status-2').attr('d')
+      // console.log(m_data)
+      let moth = d3.select('#container #father #moth #status-1').transition()
+        .attr('d', m_data2)
+        .delay(50)
+        .duration(100)
+        // .repeat(10)
+        .on('end', function() {
+          moth.transition()
+            .attr('d', m_data1)
+            .delay(50)
+            .duration(100)
+            .on('end', function() {
+              if (null != times && 0 < times) {
+                console.log('times: ' + times)
+                father_speaking(times - 1);
+              }
+              else {
+                g_animating = false
+                console.log('father speaking ... END');
+              }
+            })
+          })
+    }
+
+    function second_scene() {
+      d3.select('#container>svg').transition()
+        .attr('viewBox', '-200 -200 900 900')
+        .duration(800)
+        .on('end', function () {
+          father_speaking(4)
+
+          d3.select('#container #baby').transition()
+            .attr('transform', 'translate(' + 383.000000 + ',' + (816.000000 - 60) + ')')
+            .duration(200)
+        })
+
+        d3.select('#container #mother').transition()
+        .attr('opacity', 0)
+        .duration(700)
+
+        d3.select('#container #wall').transition()
+        .attr('opacity', 0)
+        .duration(700)
+
+        d3.select('#father_means').transition()
+        .attr('opacity', 1)
+        .delay(400)
+        .duration(500)
+    }
+
+    function third_scene() {
+
+    }
+
+    function last_scene() {
+      
+    }
+
+    let animations = [
+      second_scene,
+      third_scene,
+      last_scene,
+    ]
+  </script>
+</head>
+<body>
+  <div id="container" onclick="onClickContainer()"></div>
+  <script type="text/javascript">
+    d3.xml('./story.svg', function(error, data) {
+      // console.log(d3.select('#svg2'))
+      // console.log(data)
+      if (null != data && null != data.documentElement) {
+        d3.select('#container').each(function () {
+          this.appendChild(data.documentElement)
+        })
+      }
+    })
+  </script>
+</body>
+</html>
