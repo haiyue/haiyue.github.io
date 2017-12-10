@@ -9,10 +9,16 @@
 
   <style>
     #container {
-      width: 1070px;
-      height: 1015px;
+      max-width: 100vw;
+      max-height: 100vh;
       overflow: hidden;
-      background-color: #A0E0DA;
+      /* background-color: #A0E0DA; */
+    }
+
+    #container>svg {
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
     }
   </style>
 
@@ -89,17 +95,40 @@
     }
 
     function third_scene() {
+      d3.select('#container>svg').transition()
+        .attr('viewBox', '100 200 500 500')
+        .duration(800)
+        .on('end', function () {
+          father_speaking(4)
 
+          d3.select('#container #baby').transition()
+            .attr('transform', 'translate(' + 383.000000 + ',' + (816.000000 - 60) + ')')
+            .duration(200)
+        })
+
+      d3.select('#father').transition()
+        .attr('opacity', 0)
+        .duration(800)
+
+      d3.select('#father_means').transition()
+        .attr('opacity', 0)
+        .delay(400)
+        .duration(500)
+
+      d3.select('#baby_means').transition()
+        .attr('opacity', 1)
+        .delay(400)
+        .duration(500)
     }
 
     function last_scene() {
-      
+
     }
 
     let animations = [
       second_scene,
       third_scene,
-      last_scene,
+      // last_scene,
     ]
   </script>
 </head>
