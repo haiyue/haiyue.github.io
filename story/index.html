@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,22 +10,23 @@
 
   <style>
     #container {
-      max-width: 100vw;
-      max-height: 100vh;
+      width: 100vmin;
+      height: 100vmin;
       overflow: hidden;
       /* background-color: #A0E0DA; */
     }
 
     #container>svg {
       overflow: hidden;
-      width: 100vw;
-      height: 100vh;
+      width: 100vmin;
+      height: 100vmin;
     }
   </style>
 
   <script type="text/javascript">
     let g_index = 0;
     let g_animating = false;
+
     function onClickContainer(event) {
       if (g_animating) {
         return
@@ -33,9 +35,8 @@
 
       if (g_index > animations.length) {
         // console.log('index: ' + g_index);
-        alert('未完待续.....');
-      }
-      else {
+        alert('谢谢.....');
+      } else {
         animations[g_index - 1]()
       }
     }
@@ -50,22 +51,21 @@
         .delay(50)
         .duration(100)
         // .repeat(10)
-        .on('end', function() {
+        .on('end', function () {
           moth.transition()
             .attr('d', m_data1)
             .delay(50)
             .duration(100)
-            .on('end', function() {
+            .on('end', function () {
               if (null != times && 0 < times) {
                 console.log('times: ' + times)
                 father_speaking(times - 1);
-              }
-              else {
+              } else {
                 g_animating = false
                 console.log('father speaking ... END');
               }
             })
-          })
+        })
     }
 
     function second_scene() {
@@ -80,15 +80,15 @@
             .duration(200)
         })
 
-        d3.select('#container #mother').transition()
+      d3.select('#container #mother').transition()
         .attr('opacity', 0)
         .duration(700)
 
-        d3.select('#container #wall').transition()
+      d3.select('#container #wall').transition()
         .attr('opacity', 0)
         .duration(700)
 
-        d3.select('#father_means').transition()
+      d3.select('#father_means').transition()
         .attr('opacity', 1)
         .delay(400)
         .duration(500)
@@ -98,13 +98,6 @@
       d3.select('#container>svg').transition()
         .attr('viewBox', '100 200 500 500')
         .duration(800)
-        .on('end', function () {
-          father_speaking(4)
-
-          d3.select('#container #baby').transition()
-            .attr('transform', 'translate(' + 383.000000 + ',' + (816.000000 - 60) + ')')
-            .duration(200)
-        })
 
       d3.select('#father').transition()
         .attr('opacity', 0)
@@ -122,20 +115,28 @@
     }
 
     function last_scene() {
-
+      d3.select('#container>svg').transition()
+        .attr('viewBox', '600 200 500 500')
+        .duration(800)
+        
+      d3.select('#result').transition()
+        .attr('opacity', 1)
+        .delay(400)
+        .duration(500)
     }
 
     let animations = [
       second_scene,
       third_scene,
-      // last_scene,
+      last_scene,
     ]
   </script>
 </head>
+
 <body>
   <div id="container" onclick="onClickContainer()"></div>
   <script type="text/javascript">
-    d3.xml('./story.svg', function(error, data) {
+    d3.xml('./story.svg', function (error, data) {
       // console.log(d3.select('#svg2'))
       // console.log(data)
       if (null != data && null != data.documentElement) {
@@ -146,4 +147,5 @@
     })
   </script>
 </body>
+
 </html>
