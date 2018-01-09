@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>随机线条的素描效果</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.6/p5.min.js"></script>
+
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+
+    canvas {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <script>
+    // setInterval(animations, 5);
+    // animations(0);
+
+    /*
+      Johan Karlsson (DonKarlssonSan)
+      I tried to find the copyright info for the image
+      but failed, the image is all over internet.
+    */
+    function Particle() {
+      this.count = 0,
+      this.x = random(width);
+      this.y = random(height);
+      this.oldX = this.x;
+      this.oldY = this.y;
+    }
+
+    let max_count = 20000
+    Particle.prototype.move = function (stepSize) {
+      if (isNaN(stepSize)) {
+        console.log('is NaN ....');
+        return
+      }
+      if (max_count < this.count) {
+        console.log('remove:', this)
+
+        let idx = particles.indexOf(this)
+        particles.splice(idx, 1)
+        return
+      }
+      else if (15 > stepSize) {
+        this.count ++
+      }
+      this.oldX = this.x;
+      this.oldY = this.y;
+      this.x += random(-stepSize, stepSize);
+      this.y += random(-stepSize, stepSize);
+      if (this.x < 0) this.x = 0;
+      if (this.x > width) this.x = width;
+      if (this.y < 0) this.y = 0;
+      if (this.y > height) this.y = height;
+    }
+
+    Particle.prototype.draw = function () {
+      line(this.oldX, this.oldY, this.x, this.y);
+    }
+
+    var theImage;
+    var px;
+    var width;
+    var height;
+
+    window.addEventListener('resize', function () {
+      setup();
+    })
+
+    let img = window.location.search.substr(1)
+    if (!img || 0 == img.length) {
+      img = 'default.jpg';
+    }
+    console.log('query string: ', img)
+
+    function preload() {
+      theImage = loadImage(img)
+    }
+
+    function setup() {
+      cursor(HAND);
+      iterations = 50;
+      let b = bounds(theImage.width, theImage.height)
+      width = b.width
+      height = b.height
+      console.log({
+        image: {
+          width: theImage.width, height: theImage.height
+        },
+        canvas: {
+          width: width, height: height,
+        }
+      })
+      createCanvas(width, height);
+      reset();
+      stroke(0, 10);
+    }
+
+    function draw() {
+      for (var i = 0; i < iterations; i++) {
+        particles.forEach(p => {
+          p.move(stepSize(p.x, p.y, p.count));
+          p.draw();
+        });
+      }
+    }
+
+    function bounds(width, height) {
+      let clientWidth = document.body.clientWidth - 50 // theImage.width;
+      let clientHeight = document.body.clientHeight - 50 // theImage.height;
+      let scale = {
+        width: width / clientWidth,
+        height: height / clientHeight,
+      };
+      console.log(scale)
+      if (scale.width > scale.height) {
+        return {
+          width: clientWidth,
+          height: floor(height / scale.width)
+        }
+      } else {
+        return {
+          width: floor(width / scale.height),
+          height: clientHeight
+        }
+      }
+    }
+
+    function stepSize(x, y, count) {
+      x = Math.min(floor(x / width * theImage.width), theImage.width - 1);
+      y = Math.min(floor(y / height * theImage.height), theImage.height - 1);
+      
+      let off = (y * theImage.width + x) * 4;
+      let m = (px[off] + px[off + 1] + px[off + 2]) / 3;
+
+      if (count > max_count) {
+        return 30;
+      }
+
+      return map(m, 0, 255, 3, 30);
+    }
+
+    function initParticles() {
+      particles = [];
+      for (var i = 0; i < 100; i++) {
+        particles.push(new Particle());
+      }
+    }
+
+    function initImage() {
+      image(theImage, 0, 0);
+      var img = get(0, 0, theImage.width, theImage.height);
+      img.loadPixels();
+      px = img.pixels;
+      background(255);
+    }
+
+    function reset() {
+      initParticles();
+      clear();
+      initImage();
+    }
+
+    function mouseClicked() {
+      reset();
+    }
+  </script>
+</body>
+
+</html>
